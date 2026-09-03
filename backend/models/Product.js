@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { slugify } from "../utils/slugify.js";
 
 const variantSchema = new mongoose.Schema(
   {
@@ -42,5 +43,29 @@ const productSchema = new mongoose.Schema(
 );
 
 productSchema.index({ name: "text", shortDescription: "text", tags: "text" });
+
+// Always normalize the slug into a safe form — whatever an admin types in
+// (spaces, capitals, punctuation) never reaches the database or a URL as-is.
+// If no slug was provided at all, derive one from the name.
+function normalizeSlug(doc) {
+  const source = doc.slug || doc.name;
+  if (source) doc.slug = slugify(source);
+}
+
+productSchema.pre("save", function (next) {
+  normalizeSlug(this);
+  next();
+});
+
+// findByIdAndUpdate/findOneAndUpdate skip document middleware by default, so
+// the admin "Edit Product" flow (which uses findByIdAndUpdate) needs its own
+// hook to get the same protection.
+productSchema.pre(["findOneAndUpdate", "findByIdAndUpdate"], function (next) {
+  const update = this.getUpdate();
+  if (update.slug || update.name) {
+    update.slug = slugify(update.slug || update.name);
+  }
+  next();
+});
 
 export default mongoose.model("Product", productSchema);
