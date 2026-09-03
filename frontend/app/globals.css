@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-ajwa-cream text-ajwa-ink font-body;
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-lg border border-ajwa-navy/15 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ajwa-navy/30 placeholder:text-ajwa-ink/40;
+  }
+}
